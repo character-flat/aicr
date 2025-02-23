@@ -1,8 +1,10 @@
-"forwardPorts": [8000],
-"portsAttributes": {
-  "8000": {
-    "label": "FastAPI",
-    "onAutoForward": "openBrowser",
-    "visibility": "public"
+{
+  "forwardPorts": [8000],
+  "portsAttributes": {
+    "8000": {
+      "label": "FastAPI",
+      "onAutoForward": "openBrowser",
+      "visibility": "public"
+    }
   }
 }
