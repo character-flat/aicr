@@ -1,6 +1,8 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, HTTPException, Header, Request
 from fastapi.responses import HTMLResponse, JSONResponse
+import hmac, hashlib
 
+GITHUB_SECRET = 'randomkey'
 app = FastAPI()
 
 @app.get("/")
@@ -25,17 +27,33 @@ def ping():
 
 #setting up webhook listener
 @app.api_route("/webhook", methods=["GET", "POST"])
-async def github_webhook(request: Request):
+async def github_webhook(request: Request, x_github_event: str = Header(None), x_hub_signature_256: str = Header(None)):
     if request.method == "GET":
         return JSONResponse(content={"message": "Webhook GET route is live"})
 
-    if request.method == "POST":
-        try:
-            payload = await request.json()
-            event = request.headers.get('X-GitHub-Event')
-            print(f"Received event: {event}")
-            print(payload)
-            return JSONResponse(content={"message": f"Received {event} event"})
-        except Exception as e:
-            print(f"Error parsing payload: {e}")
-            return JSONResponse(status_code=400, content={"error": "Invalid payload"})
+    body = await request.body()
+
+    # Validate signature
+    if not is_valid_signature(body, x_hub_signature_256, GITHUB_SECRET):
+        raise HTTPException(status_code=401, detail="Invalid signature")
+
+    # Parse payload
+    payload = await request.json()
+    print(f"Received event: {x_github_event}")
+    print(payload)
+
+    return JSONResponse(content={"message": f"Received {x_github_event} event"})
+
+
+def is_valid_signature(payload_body, signature_header, secret):
+    if signature_header is None or secret is None:
+        return False
+
+    sha_name, signature = signature_header.split('=')
+    if sha_name != 'sha256':
+        return False
+
+    mac = hmac.new(secret.encode(), msg=payload_body, digestmod=hashlib.sha256)
+    expected_signature = mac.hexdigest()
+
+    return hmac.compare_digest(expected_signature, signature)
