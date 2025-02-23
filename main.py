@@ -2,7 +2,7 @@ from fastapi import FastAPI, HTTPException, Header, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 import hmac, hashlib
 
-GITHUB_SECRET = 'randomkey'
+GITHUB_SECRET = 'randomkey123'
 app = FastAPI()
 
 @app.get("/")
