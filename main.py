@@ -30,10 +30,12 @@ async def github_webhook(request: Request):
         return JSONResponse(content={"message": "Webhook GET route is live"})
 
     if request.method == "POST":
-        payload = await request.json()
-        event = request.headers.get('X-GitHub-Event')
-        print(f"Received event: {event}")
-        print(payload)
-        return JSONResponse(content={"message": "Webhook received"})
-
-#another branch
+        try:
+            payload = await request.json()
+            event = request.headers.get('X-GitHub-Event')
+            print(f"Received event: {event}")
+            print(payload)
+            return JSONResponse(content={"message": f"Received {event} event"})
+        except Exception as e:
+            print(f"Error parsing payload: {e}")
+            return JSONResponse(status_code=400, content={"error": "Invalid payload"})
